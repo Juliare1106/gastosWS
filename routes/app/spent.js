@@ -10,7 +10,9 @@ const {
   SpentGetCount,
   SpentPut,
   SpentGetUserAll,
-  SpentGetUserSum
+  SpentGetUserSum,
+  SpentGetUserByMonthCategory,
+  SpentGetUserGlobalCategory
 } = require("../../controllers/app/spent.controller");
 
 const router = require("express").Router();
@@ -33,6 +35,14 @@ SpentGetUserAll);
 router.get("/usersum",
 check("id").custom(thereIsUser),
 SpentGetUserSum);
+
+router.get("/usersummonthcat",
+check("id").custom(thereIsUser),
+SpentGetUserByMonthCategory);
+
+router.get("/userglobal",
+check("id").custom(thereIsUser),
+SpentGetUserGlobalCategory);
 
 router.get("/count",
 SpentGetCount);

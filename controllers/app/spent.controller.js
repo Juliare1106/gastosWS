@@ -95,6 +95,106 @@ const SpentGetUser = async (req = request, res = response) => {
   });
  };
 
+ const SpentGetUserByMonthCategory= async (req = request, res = response) => {
+  const { id } = req.query;
+  const { date } = req.query;
+
+  const globalDate = new Date(date);
+  const month = globalDate.getMonth();
+  const year = globalDate.getFullYear();
+  const [spent] = await Promise.all([
+    Spent.aggregate([
+      {
+        '$lookup': {
+          'from': 'generalusers', 
+          'localField': 'user', 
+          'foreignField': '_id', 
+          'as': 'user'
+        }
+      }, {
+        '$match': {
+          'month': month, 
+          'year': year, 
+          'user._id': new mongoose.Types.ObjectId(id)
+        }
+      }, {
+        '$lookup': {
+          'from': 'categories', 
+          'localField': 'category', 
+          'foreignField': '_id', 
+          'as': 'categoriaInfo'
+        }
+      }, {
+        '$unwind': '$categoriaInfo'
+      }, {
+        '$group': {
+          '_id': '$category', 
+          'categoria': {
+            '$first': '$categoriaInfo.description'
+          }, 
+          'totalGastos': {
+            '$sum': '$value'
+          }
+        }
+      }
+    ]),
+  ]);
+
+  res.status(200).json({
+    msg : "OK",
+    spent: spent
+  });
+ };
+
+ const SpentGetUserGlobalCategory= async (req = request, res = response) => {
+  const { id } = req.query;
+  const { date } = req.query;
+
+  const globalDate = new Date(date);
+  const month = globalDate.getMonth();
+  const year = globalDate.getFullYear();
+  const [spent] = await Promise.all([
+    Spent.aggregate([
+      {
+        '$lookup': {
+          'from': 'generalusers', 
+          'localField': 'user', 
+          'foreignField': '_id', 
+          'as': 'user'
+        }
+      }, {
+        '$match': {
+          'user._id': new mongoose.Types.ObjectId(id)
+        }
+      }, {
+        '$lookup': {
+          'from': 'categories', 
+          'localField': 'category', 
+          'foreignField': '_id', 
+          'as': 'categoriaInfo'
+        }
+      }, {
+        '$unwind': '$categoriaInfo'
+      }, {
+        '$group': {
+          '_id': '$category', 
+          'categoria': {
+            '$first': '$categoriaInfo.description'
+          }, 
+          'totalGastos': {
+            '$sum': '$value'
+          }
+        }
+      }
+    ]),
+  ]);
+
+  res.status(200).json({
+    msg : "OK",
+    spent: spent
+  });
+ };
+
  const SpentGetUserAll = async (req = request, res = response) => {
   const { id } = req.query;
 
@@ -204,6 +304,8 @@ module.exports = {
   SpentGetAll,
   SpentGetUser,
   SpentGetUserAll,
+  SpentGetUserByMonthCategory,
+  SpentGetUserGlobalCategory,
   SpentGetCount,
   SpentGetUserSum,
   SpentPost,
